@@ -69,7 +69,10 @@ relations = relations_atty_client
 #Create Graph
 #g = graph_from_data_frame(relations, directed=FALSE, vertices=actors)
 set.seed(1)
-relations=relations[sample.int(length(relations$from),length(relations$from)/10),]
+#relations=relations[sample.int(length(relations$from),length(relations$from)/10),]
+actors = actors[actors$id %in% unique(rbind(data.frame(id=relations$to),data.frame(id=relations$from), deparse.level = 0))[,'id'],]
+#print(dim(relations))
+#print(dim(actors))
 #g = graph_from_data_frame(relations, directed=FALSE, vertices=actors)
 #set.seed(1)
 #g_layout = layout.drl(g, use.seed=TRUE)
@@ -80,26 +83,35 @@ relations=relations[sample.int(length(relations$from),length(relations$from)/10)
 
 #Setup Colors
 #clr=get.vertex.attribute(g,'colors')
-clr = actors$colors
-clr[clr==3] = '#ffc0cb'
-clr[clr==2] = '#008000'
-clr[clr==1] = '#ff0000'
-clr[clr==0] = '#0000ff'
+#clr = actors$colors
+#clr[clr==3] = '#ffc0cb'
+actors$group = 'Contacts'
+actors$group[actors$colors==0] = 'Attorneys'
+actors$group[actors$colors==2] = 'Top Clients'
+actors$group[actors$colors==3] = 'Alumni'
+#clr[clr==2] = '#008000'
+#clr[clr==1] = '#ff0000'
+#clr[clr==0] = '#0000ff'
 #actors$color = clr
-actors$color.background = clr
-actors$color.highlight.background = '#ffff00'
+#actors$color.background = clr
+#actors$color.highlight.background = '#ffff00'
 actors$size = 1
 actors$title = ifelse(actors$colors == 0, paste0("<p><b>", actors$fullname,"</b><br>",actors$Job.Title,"</p>"),"")
-#actors$color.highlight = '#ffff00'
-#actors$color.highlight.background = '#ffff00'
+actors$color.highlight = '#ffff00'
+actors$color.highlight.background = '#ffff00'
 relations$color = "#a8a8a8" 
-relations$size = .05
+relations$size = 1
 #relations$color.highlight.background = '#ffff00'
 #relations$color.highlight = '#ffff00'
 #print(table(actors$colors))
-g = graph_from_data_frame(relations, directed=FALSE, vertices=actors)
+
+uiNames = data.frame(fullname=actors$fullname[actors$colors==0], id = actors$id[actors$colors==0])
+uiNames = uiNames[order(uiNames$fullname),]
+uiNames = with(uiNames, split(id,fullname))
+
+nodes = actors[,c('id','fullname','Job.Title','group')]
+g = graph_from_data_frame(relations, directed=FALSE, vertices=nodes)
+print('Made it here')
+write.csv(uiNames, 'out.csv')
 #g_layout = layout.drl(g, use.seed=TRUE)
 
-uiNames = data.frame(names=actors$fullname[actors$colors==0], id = actors$id[actors$colors==0])
-uiNames = uiNames[order(uiNames$names),]
-uiNames = with(uiNames, split(id,names))
